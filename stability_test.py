@@ -1,5 +1,6 @@
 import cv2
 import time
+TEST_SECONDS = 1800
 from config import RTSP_URL
 cap = cv2.VideoCapture(RTSP_URL)
 if not cap.isOpened():
@@ -12,14 +13,16 @@ if not ok:
 start = time.time()
 Success_num = 0
 fail_num = 0
-while time.time()-start<60:
+while time.time()-start<TEST_SECONDS:
     ok,frame = cap.read()
     if ok:
         Success_num += 1
     else:
         fail_num += 1
 elapsed_time = time.time()-start
+print("success_num:",Success_num)
+print("fail_num:",fail_num)
 print("success_fps:",Success_num/elapsed_time)
 print("fail_fps",fail_num/elapsed_time)
 print("total_fps",(Success_num + fail_num)/elapsed_time)
-cap.release
+cap.release()
