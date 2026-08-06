@@ -10,3 +10,4 @@ while True:
     print(volume)
     if volume > THRESHOLD:
         print("检测到声音")
+//
