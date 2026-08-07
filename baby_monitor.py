@@ -3,9 +3,14 @@ from mediapipe.tasks.python import audio as mp_audio
 from mediapipe.tasks.python.components import containers as mp_containers
 import sounddevice as sd
 
-THRESHOLD = 0.15
+THRESHOLD = 0.1
 SAMPLE_RATE = 16000
 SECONDS = 1
+cry_count = 0
+silence_count = 0
+CRY_COUNT_THERESHOLD = 5
+SILENCE_RESET_THERSHOLD = 10
+
 
 options = mp_audio.AudioClassifierOptions(
     base_options=mp_python.BaseOptions(model_asset_path="yamnet.tflite"),
@@ -16,15 +21,28 @@ print("模型加载成功.")
 print("监护中...")
 try:
   while True:
+      is_crying = False
       audio_data = sd.rec(SAMPLE_RATE * SECONDS,samplerate = SAMPLE_RATE,channels = 1)
       sd.wait()
       volume = abs(audio_data).max()
-      print(volume)
+      print(volume,cry_count)
+      #检查音量是否超过阈值
       if volume > THRESHOLD:
-          print("检测到声音")
-          clip = mp_containers.AudioData.create_from_array(audio_data, SAMPLE_RATE)
-          result = classifier.classify(clip)
-          for category in result[0].classifications[0].categories:
-                print(category.category_name, category.score)
+        print("检测到声音")
+        clip = mp_containers.AudioData.create_from_array(audio_data, SAMPLE_RATE)
+        result = classifier.classify(clip)
+        for category in result[0].classifications[0].categories:
+          if category.category_name == "Baby cry, infant cry" and category.score > 0.3:
+            is_crying = True
+      #更新哭或者安静的秒数
+      if is_crying:
+        cry_count += 1
+        silence_count = 0
+        if cry_count >= CRY_COUNT_THERESHOLD:
+          print("宝宝正在哭")
+      else:
+        silence_count += 1
+        if silence_count >= SILENCE_RESET_THERSHOLD:
+          cry_count = 0
 except KeyboardInterrupt:
   print("监护停止")
