@@ -12,17 +12,19 @@ options = mp_audio.AudioClassifierOptions(
     max_results=3,
   )
 classifier = mp_audio.AudioClassifier.create_from_options(options)
-print("Model loaded.")
-print("Monitoring...")
-
-while True:
-    audio_data = sd.rec(SAMPLE_RATE * SECONDS,samplerate = SAMPLE_RATE,channels = 1)
-    sd.wait()
-    volume = abs(audio_data).max()
-    print(volume)
-    if volume > THRESHOLD:
-        print("检测到声音")
-        clip = mp_containers.AudioData.create_from_array(audio_data, SAMPLE_RATE)
-        result = classifier.classify(clip)
-        for category in result[0].classifications[0].categories:
-              print(category.category_name, category.score)
+print("模型加载成功.")
+print("监护中...")
+try:
+  while True:
+      audio_data = sd.rec(SAMPLE_RATE * SECONDS,samplerate = SAMPLE_RATE,channels = 1)
+      sd.wait()
+      volume = abs(audio_data).max()
+      print(volume)
+      if volume > THRESHOLD:
+          print("检测到声音")
+          clip = mp_containers.AudioData.create_from_array(audio_data, SAMPLE_RATE)
+          result = classifier.classify(clip)
+          for category in result[0].classifications[0].categories:
+                print(category.category_name, category.score)
+except KeyboardInterrupt:
+  print("监护停止")
