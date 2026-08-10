@@ -10,6 +10,7 @@ cry_count = 0
 silence_count = 0
 CRY_COUNT_THERESHOLD = 5
 SILENCE_RESET_THERSHOLD = 10
+alerted = False
 
 
 options = mp_audio.AudioClassifierOptions(
@@ -32,17 +33,19 @@ try:
         clip = mp_containers.AudioData.create_from_array(audio_data, SAMPLE_RATE)
         result = classifier.classify(clip)
         for category in result[0].classifications[0].categories:
-          if category.category_name == "Baby cry, infant cry" and category.score > 0.3:
+          if category.category_name == "Baby cry, infant cry" and category.score > 0.2:
             is_crying = True
       #更新哭或者安静的秒数
       if is_crying:
         cry_count += 1
         silence_count = 0
-        if cry_count >= CRY_COUNT_THERESHOLD:
+        if cry_count >= CRY_COUNT_THERESHOLD and not alerted:
           print("宝宝正在哭")
+          alerted = True
       else:
         silence_count += 1
         if silence_count >= SILENCE_RESET_THERSHOLD:
           cry_count = 0
+          alerted = False
 except KeyboardInterrupt:
   print("监护停止")
