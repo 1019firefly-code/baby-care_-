@@ -21,6 +21,7 @@ options = mp_audio.AudioClassifierOptions(
 classifier = mp_audio.AudioClassifier.create_from_options(options)
 print("模型加载成功.")
 print("监护中...")
+log_file = open("cry_log.csv","a",encoding="utf-8")
 try:
   while True:
       is_crying = False
@@ -48,9 +49,7 @@ try:
         if silence_count >= SILENCE_RESET_THERSHOLD:
           cry_count = 0
           alerted = False
-      log_file = open("cry_log.csv","a",encoding="utf-8")
       log_file.write(f"{datetime.now()},{volume},{is_crying}\n")
       log_file.flush()
-      log_file.close()
 except KeyboardInterrupt:
   print("监护停止")
