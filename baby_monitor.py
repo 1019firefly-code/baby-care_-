@@ -16,7 +16,7 @@ alerted = False
 
 options = mp_audio.AudioClassifierOptions(
     base_options=mp_python.BaseOptions(model_asset_path="yamnet.tflite"),
-    max_results=3,
+    max_results=10,
   )
 classifier = mp_audio.AudioClassifier.create_from_options(options)
 print("模型加载成功.")
@@ -25,6 +25,9 @@ log_file = open("cry_log.csv","a",encoding="utf-8")
 try:
   while True:
       is_crying = False
+      cry_score = 0
+      top_category = ""
+      top_score = 0
       audio_data = sd.rec(SAMPLE_RATE * SECONDS,samplerate = SAMPLE_RATE,channels = 1)
       sd.wait()
       volume = abs(audio_data).max()
@@ -34,9 +37,14 @@ try:
         print("检测到声音")
         clip = mp_containers.AudioData.create_from_array(audio_data, SAMPLE_RATE)
         result = classifier.classify(clip)
+        top = result[0].classifications[0].categories[0]
+        top_category = top.category_name
+        top_score = top.score
         for category in result[0].classifications[0].categories:
           if category.category_name == "Baby cry, infant cry" and category.score > 0.2:
             is_crying = True
+          if category.category_name == "Baby cry, infant cry":
+            cry_score = category.score
       #更新哭或者安静的秒数
       if is_crying:
         cry_count += 1
@@ -49,7 +57,7 @@ try:
         if silence_count >= SILENCE_RESET_THERSHOLD:
           cry_count = 0
           alerted = False
-      log_file.write(f"{datetime.now()},{volume},{is_crying}\n")
+      log_file.write(f'{datetime.now()},{volume},{is_crying},{cry_score},"{top_category}",{top_score}\n')
       log_file.flush()
 except KeyboardInterrupt:
   print("监护停止")
