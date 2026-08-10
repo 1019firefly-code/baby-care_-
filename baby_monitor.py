@@ -2,6 +2,7 @@ from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import audio as mp_audio
 from mediapipe.tasks.python.components import containers as mp_containers
 import sounddevice as sd
+from datetime import datetime
 
 THRESHOLD = 0.1
 SAMPLE_RATE = 16000
@@ -47,5 +48,9 @@ try:
         if silence_count >= SILENCE_RESET_THERSHOLD:
           cry_count = 0
           alerted = False
+      log_file = open("cry_log.csv","a",encoding="utf-8")
+      log_file.write(f"{datetime.now()},{volume},{is_crying}\n")
+      log_file.flush()
+      log_file.close()
 except KeyboardInterrupt:
   print("监护停止")
