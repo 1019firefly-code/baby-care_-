@@ -3,6 +3,7 @@ from mediapipe.tasks.python import audio as mp_audio
 from mediapipe.tasks.python.components import containers as mp_containers
 import sounddevice as sd
 from datetime import datetime
+from notifier import send_notification
 
 THRESHOLD = 0.1
 SAMPLE_RATE = 16000
@@ -51,6 +52,7 @@ try:
         silence_count = 0
         if cry_count >= CRY_COUNT_THERESHOLD and not alerted:
           print("宝宝正在哭")
+          send_notification(f'datetime:{datetime.now()}, 宝宝正在哭')
           alerted = True
       else:
         silence_count += 1
