@@ -2,7 +2,7 @@ from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import audio as mp_audio
 from mediapipe.tasks.python.components import containers as mp_containers
 import sounddevice as sd
-from datetime import datetime
+from datetime import datetime, timedelta
 from notifier import send_notification
 
 THRESHOLD = 0.1
@@ -13,6 +13,8 @@ silence_count = 0
 CRY_COUNT_THERESHOLD = 5
 SILENCE_RESET_THERSHOLD = 10
 alerted = False
+last_notification_time = datetime.min
+HEARTBEAT_INTERVAL = timedelta(seconds = 5)
 
 
 options = mp_audio.AudioClassifierOptions(
@@ -59,6 +61,9 @@ try:
         if silence_count >= SILENCE_RESET_THERSHOLD:
           cry_count = 0
           alerted = False
+        if datetime.now() - last_notification_time > HEARTBEAT_INTERVAL:
+          last_notification_time = datetime.now()
+          send_notification(f'datetime: {datetime.now()}, 监护器心跳: 宝宝监控运行中')
       log_file.write(f'{datetime.now()},{volume},{is_crying},{cry_score},"{top_category}",{top_score}\n')
       log_file.flush()
 except KeyboardInterrupt:
