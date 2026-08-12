@@ -14,7 +14,7 @@ CRY_COUNT_THERESHOLD = 5
 SILENCE_RESET_THERSHOLD = 10
 alerted = False
 last_notification_time = datetime.min
-HEARTBEAT_INTERVAL = timedelta(seconds = 5)
+HEARTBEAT_INTERVAL = timedelta(hours = 1)
 
 
 options = mp_audio.AudioClassifierOptions(
