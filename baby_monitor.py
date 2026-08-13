@@ -1,9 +1,11 @@
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import audio as mp_audio
 from mediapipe.tasks.python.components import containers as mp_containers
-import sounddevice as sd
 from datetime import datetime, timedelta
 from notifier import send_notification
+from config import RTSP_URL
+import subprocess
+import numpy as np
 
 THRESHOLD = 0.1
 SAMPLE_RATE = 16000
@@ -15,6 +17,8 @@ SILENCE_RESET_THERSHOLD = 10
 alerted = False
 last_notification_time = datetime.min
 HEARTBEAT_INTERVAL = timedelta(hours = 1)
+BYTES_PER_SAMPLE = 2
+CHUNK_BYTES = SAMPLE_RATE * SECONDS * BYTES_PER_SAMPLE
 
 
 options = mp_audio.AudioClassifierOptions(
@@ -25,14 +29,17 @@ classifier = mp_audio.AudioClassifier.create_from_options(options)
 print("模型加载成功.")
 print("监护中...")
 log_file = open("cry_log.csv","a",encoding="utf-8")
+p = subprocess.Popen(["ffmpeg","-rtsp_transport","tcp","-loglevel","error","-i",RTSP_URL,"-vn","-ac","1","-ar",str(SAMPLE_RATE),"-f","s16le","-"],stdout = subprocess.PIPE)
 try:
-  while True:
+    while True:
       is_crying = False
       cry_score = 0
       top_category = ""
       top_score = 0
-      audio_data = sd.rec(SAMPLE_RATE * SECONDS,samplerate = SAMPLE_RATE,channels = 1)
-      sd.wait()
+      data = p.stdout.read(CHUNK_BYTES)
+      samples = np.frombuffer(data, dtype = np.int16)
+      audio_data = samples.astype(np.float32) / 32768.0
+      audio_data = audio_data.reshape(-1,1)
       volume = abs(audio_data).max()
       print(volume,cry_count)
       #检查音量是否超过阈值
@@ -68,3 +75,7 @@ try:
       log_file.flush()
 except KeyboardInterrupt:
   print("监护停止")
+
+finally:
+  log_file.close()
+  p.terminate()
